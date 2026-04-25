@@ -3,12 +3,41 @@ label: Mission Control
 description: Cockpit-style agent operations dashboard
 layoutVariant: cockpit
 
+colors:
+  background: "#040812"
+  foreground: "#f4fbff"
+  card: "#071125"
+  card-foreground: "#f4fbff"
+  popover: "#091427"
+  popover-foreground: "#f4fbff"
+  primary: "#7fe8ff"
+  primary-foreground: "#040812"
+  secondary: "#102441"
+  secondary-foreground: "#dff8ff"
+  muted: "#091222"
+  muted-foreground: "#9ec6d8"
+  accent: "#ffbf5a"
+  accent-foreground: "#040812"
+  destructive: "#ff6d7d"
+  destructive-foreground: "#ffffff"
+  success: "#65e3aa"
+  warning: "#ffb347"
+  border: "rgba(127, 232, 255, 0.22)"
+  input: "rgba(17, 37, 67, 0.96)"
+  ring: "#7fe8ff"
+
 palette:
   background: "#040812"
   midground: "#7fe8ff"
   foreground: "#f4fbff"
   warmGlow: "rgba(255, 191, 90, 0.18)"
   noiseOpacity: 0.42
+
+overlay:
+  noiseOpacity: 0.42
+  noiseBlendMode: screen
+  warmGlowOpacity: 0.18
+  warmGlowColor: "rgba(255, 191, 90, 0.18)"
 
 typography:
   fontSans: '"IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif'
@@ -114,4 +143,4 @@ customCSS: |
   :root[data-layout-variant="cockpit"] a {
     text-decoration-thickness: 0.08em;
     text-underline-offset: 0.16em;
-  
+  }
