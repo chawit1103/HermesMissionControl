@@ -30,6 +30,10 @@ curl http://127.0.0.1:9119/api/dashboard/plugins/rescan
 - A cockpit sidebar with system status, session count, refresh time, and telemetry bars
 - Recent sessions from `SDK.api.getSessions(10)`
 - Live agent status from `SDK.api.getStatus()`
+- Clickable session detail drawer for inspecting one session at a time
+- A health score radar that rolls up Hermes health into a single cockpit signal
+- Config diff view against the previous safe snapshot
+- Activity timeline for refreshes, rescans, and operator actions
 - Safe config snapshot handling with redaction
 - LocalStorage-backed operator notes and checklist
 - A rescan button that hits `/api/dashboard/plugins/rescan`
@@ -55,6 +59,7 @@ curl http://127.0.0.1:9119/api/dashboard/plugins/rescan
 
 - Capture the `Mission Control` tab with the cockpit theme active
 - Show the sidebar telemetry rail, session list, and notes/checklist panel
+- Show the session detail drawer, health radar, config diff, and activity timeline if possible
 - Include one shot of the refresh action and one of the plugin rescan action
 - If possible, show the safe config snapshot panel to highlight redaction and reliability
 
