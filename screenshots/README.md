@@ -2,7 +2,7 @@
 
 Use this folder for submission screenshots and demo captures.
 
-Preview images used in the main `README.md` live in `screenshots/preview/`.
+Preview images used in the main `README.md` live in this folder as the committed JPG files below.
 
 Suggested files:
 
