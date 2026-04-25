@@ -1,0 +1,14 @@
+{
+  "name": "mission-control",
+  "label": "Mission Control",
+  "description": "Cockpit-style agent operations dashboard",
+  "icon": "Shield",
+  "version": "1.0.0",
+  "tab": {
+    "path": "/mission-control",
+    "position": "end"
+  },
+  "entry": "dist/index.js",
+  "css": "dist/style.css",
+  "api": "plugin_api.py"
+}
