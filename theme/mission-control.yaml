@@ -22,15 +22,15 @@ colors:
   destructive-foreground: "#ffffff"
   success: "#65e3aa"
   warning: "#ffb347"
-  border: "rgba(127, 232, 255, 0.22)"
-  input: "rgba(17, 37, 67, 0.96)"
+  border: "#1d3f5d"
+  input: "#102441"
   ring: "#7fe8ff"
 
 palette:
   background: "#040812"
   midground: "#7fe8ff"
   foreground: "#f4fbff"
-  warmGlow: "rgba(255, 191, 90, 0.18)"
+  warmGlow: "#36260e"
   noiseOpacity: 0.42
 
 overlay:
@@ -85,7 +85,7 @@ colorOverrides:
   primaryForeground: "#040812"
   secondary: "#102441"
   secondaryForeground: "#dff8ff"
-  muted: "rgba(9, 18, 34, 0.92)"
+  muted: "#091222"
   mutedForeground: "#9ec6d8"
   accent: "#ffbf5a"
   accentForeground: "#040812"
@@ -93,8 +93,8 @@ colorOverrides:
   destructiveForeground: "#ffffff"
   success: "#65e3aa"
   warning: "#ffb347"
-  border: "rgba(127, 232, 255, 0.22)"
-  input: "rgba(17, 37, 67, 0.96)"
+  border: "#1d3f5d"
+  input: "#102441"
   ring: "#7fe8ff"
 
 customCSS: |
