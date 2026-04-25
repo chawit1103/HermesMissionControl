@@ -1,0 +1,117 @@
+name: mission-control
+label: Mission Control
+description: Cockpit-style agent operations dashboard
+layoutVariant: cockpit
+
+palette:
+  background: "#040812"
+  midground: "#7fe8ff"
+  foreground: "#f4fbff"
+  warmGlow: "rgba(255, 191, 90, 0.18)"
+  noiseOpacity: 0.42
+
+typography:
+  fontSans: '"IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif'
+  fontMono: '"IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace'
+  fontDisplay: '"IBM Plex Sans Condensed", "Segoe UI", system-ui, sans-serif'
+  fontUrl: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+  baseSize: "14px"
+  lineHeight: "1.5"
+  letterSpacing: "0.01em"
+
+layout:
+  radius: "0.85rem"
+  density: compact
+
+componentStyles:
+  card:
+    clipPath: "polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)"
+    background: "linear-gradient(180deg, rgba(7, 16, 35, 0.92), rgba(2, 7, 18, 0.96))"
+    boxShadow: "inset 0 0 0 1px rgba(127, 232, 255, 0.18), 0 20px 50px rgba(0, 0, 0, 0.45)"
+    backdropFilter: "blur(12px)"
+  header:
+    background: "linear-gradient(180deg, rgba(10, 23, 48, 0.96), rgba(4, 8, 18, 0.88))"
+    boxShadow: "inset 0 -1px 0 rgba(127, 232, 255, 0.18)"
+  footer:
+    background: "linear-gradient(180deg, rgba(4, 8, 18, 0.88), rgba(10, 23, 48, 0.96))"
+  sidebar:
+    background: "linear-gradient(180deg, rgba(4, 8, 18, 0.92), rgba(8, 18, 38, 0.98))"
+    boxShadow: "inset -1px 0 0 rgba(127, 232, 255, 0.16)"
+  tab:
+    clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)"
+    background: "linear-gradient(180deg, rgba(11, 27, 55, 0.96), rgba(4, 8, 18, 0.88))"
+  badge:
+    boxShadow: "inset 0 0 0 1px rgba(127, 232, 255, 0.22)"
+  backdrop:
+    background: "radial-gradient(circle at top, rgba(127, 232, 255, 0.10), transparent 40%), radial-gradient(circle at bottom right, rgba(255, 191, 90, 0.10), transparent 34%), linear-gradient(180deg, rgba(4, 8, 18, 1), rgba(2, 4, 10, 1))"
+  page:
+    background: "linear-gradient(180deg, rgba(4, 8, 18, 0.92), rgba(2, 4, 10, 0.98))"
+
+colorOverrides:
+  card: "#071125"
+  cardForeground: "#f4fbff"
+  popover: "#091427"
+  popoverForeground: "#f4fbff"
+  primary: "#7fe8ff"
+  primaryForeground: "#040812"
+  secondary: "#102441"
+  secondaryForeground: "#dff8ff"
+  muted: "rgba(9, 18, 34, 0.92)"
+  mutedForeground: "#9ec6d8"
+  accent: "#ffbf5a"
+  accentForeground: "#040812"
+  destructive: "#ff6d7d"
+  destructiveForeground: "#ffffff"
+  success: "#65e3aa"
+  warning: "#ffb347"
+  border: "rgba(127, 232, 255, 0.22)"
+  input: "rgba(17, 37, 67, 0.96)"
+  ring: "#7fe8ff"
+
+customCSS: |
+  :root[data-layout-variant="cockpit"] {
+    color-scheme: dark;
+  }
+
+  :root[data-layout-variant="cockpit"] body {
+    background:
+      radial-gradient(circle at 20% 10%, rgba(127, 232, 255, 0.08), transparent 24%),
+      radial-gradient(circle at 80% 0%, rgba(255, 191, 90, 0.08), transparent 26%),
+      linear-gradient(180deg, #040812 0%, #02040a 100%);
+  }
+
+  :root[data-layout-variant="cockpit"] body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0) 2px,
+      rgba(127, 232, 255, 0.035) 3px,
+      rgba(255, 255, 255, 0) 4px
+    );
+    opacity: 0.55;
+    mix-blend-mode: screen;
+  }
+
+  :root[data-layout-variant="cockpit"] body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 101;
+    background: radial-gradient(circle at center, transparent 45%, rgba(0, 0, 0, 0.36) 100%);
+  }
+
+  :root[data-layout-variant="cockpit"] ::selection {
+    background: rgba(127, 232, 255, 0.22);
+    color: #f4fbff;
+  }
+
+  :root[data-layout-variant="cockpit"] a {
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.16em;
+  
