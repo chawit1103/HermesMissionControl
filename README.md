@@ -1,12 +1,22 @@
 # Hermes Mission Control
 
-Hermes Mission Control is a cockpit-style Hermes Dashboard plugin plus matching theme for live agent operations.
+Hermes Mission Control is a cockpit-style Hermes Dashboard plugin and matching theme for live agent operations.
 
-It gives judges a polished tab, cockpit sidebar telemetry, operator notes, a safe backend config snapshot, and a no-build drop-in install.
+It turns Hermes into a polished command center with live status, recent sessions, safe config visibility, plugin health controls, and operator notes.
 
-## Fast Install
+## Preview
 
-If you only do one thing, do this:
+![Mission Control tab](screenshots/preview/mission-control-tab.jpg)
+
+![Session detail drawer](screenshots/preview/mission-control-session-detail.jpg)
+
+![Config snapshot](screenshots/preview/mission-control-config-snapshot.jpg)
+
+![Activity timeline](screenshots/preview/mission-control-activity-timeline.jpg)
+
+## Quick Start
+
+Install the plugin and theme:
 
 ```bash
 mkdir -p ~/.hermes/plugins/
@@ -18,28 +28,28 @@ cp theme/mission-control.yaml ~/.hermes/dashboard-themes/
 hermes dashboard
 ```
 
-Then click the `Mission Control` tab and, if the plugin does not appear immediately, run:
+Then open `Mission Control`. If it does not appear immediately, rescan plugins:
 
 ```bash
 curl http://127.0.0.1:9119/api/dashboard/plugins/rescan
 ```
 
-## What You Get
+## What It Does
 
 - A dedicated `Mission Control` tab in Hermes Dashboard
-- A cockpit sidebar with system status, session count, refresh time, and telemetry bars
+- Sidebar telemetry with system status, session count, refresh time, and signal bars
 - Recent sessions from `SDK.api.getSessions(10)`
 - Live agent status from `SDK.api.getStatus()`
-- Clickable session detail drawer for inspecting one session at a time
-- A health score radar that rolls up Hermes health into a single cockpit signal
+- Session detail drawer for inspecting one session at a time
+- Health radar for a quick system readout
 - Config diff view against the previous safe snapshot
 - Activity timeline for refreshes, rescans, and operator actions
-- Safe config snapshot handling with redaction
 - LocalStorage-backed operator notes and checklist
+- Safe config snapshot handling with redaction
 - A rescan button that hits `/api/dashboard/plugins/rescan`
 - A premium dark theme with scanlines, glow, and notched panels
 
-## Judge Notes
+## Installation Notes
 
 - Plugin structure: `plugin/mission-control/dashboard/manifest.json`, `dist/index.js`, `dist/style.css`, `plugin_api.py`
 - Theme file: `theme/mission-control.yaml`
@@ -55,7 +65,7 @@ curl http://127.0.0.1:9119/api/dashboard/plugins/rescan
 - If Hermes has no sessions yet, Mission Control will show an empty state instead of failing
 - If Hermes internals are unavailable, the plugin falls back safely rather than crashing
 
-## Screenshot and Demo Guidance
+## Screenshot Guidance
 
 - Capture the `Mission Control` tab with the cockpit theme active
 - Show the sidebar telemetry rail, session list, and notes/checklist panel
