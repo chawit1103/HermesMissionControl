@@ -1,0 +1,139 @@
+name: sage-linen
+label: Sage Linen
+description: Soft sage and linen with a calm editorial feel
+layoutVariant: cockpit
+
+colors:
+  background: "#f3f6ef"
+  foreground: "#202722"
+  card: "#fafcf7"
+  card-foreground: "#202722"
+  popover: "#ffffff"
+  popover-foreground: "#202722"
+  primary: "#7fa98b"
+  primary-foreground: "#ffffff"
+  secondary: "#dde5d8"
+  secondary-foreground: "#2d352f"
+  muted: "#edf1e8"
+  muted-foreground: "#68736b"
+  accent: "#cfe1c6"
+  accent-foreground: "#2d352f"
+  destructive: "#cf7276"
+  destructive-foreground: "#ffffff"
+  success: "#75b48a"
+  warning: "#caa65d"
+  border: "#d8e1d5"
+  input: "#e5ece0"
+  ring: "#7fa98b"
+
+palette:
+  background: "#f3f6ef"
+  midground: "#cfe1c6"
+  foreground: "#202722"
+  warmGlow: "#dae7c8"
+  noiseOpacity: 0.10
+
+overlay:
+  noiseOpacity: 0.10
+  noiseBlendMode: soft-light
+  warmGlowOpacity: 0.07
+  warmGlowColor: "rgba(207, 225, 198, 0.18)"
+
+typography:
+  fontSans: '"Manrope", "Avenir Next", "Segoe UI", system-ui, sans-serif'
+  fontMono: '"IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace'
+  fontDisplay: '"Manrope", "Avenir Next", "Segoe UI", system-ui, sans-serif'
+  fontUrl: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+  baseSize: "15px"
+  lineHeight: "1.66"
+  letterSpacing: "0.008em"
+
+layout:
+  radius: "1rem"
+  density: comfortable
+
+componentStyles:
+  card:
+    clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)"
+    background: "linear-gradient(180deg, rgba(250, 252, 247, 0.98), rgba(242, 246, 238, 0.92))"
+    boxShadow: "inset 0 0 0 1px rgba(127, 169, 139, 0.10), 0 18px 36px rgba(54, 71, 58, 0.10)"
+    backdropFilter: "blur(10px)"
+  header:
+    background: "linear-gradient(180deg, rgba(250, 252, 247, 0.98), rgba(237, 242, 233, 0.94))"
+    boxShadow: "inset 0 -1px 0 rgba(127, 169, 139, 0.10)"
+  footer:
+    background: "linear-gradient(180deg, rgba(237, 242, 233, 0.94), rgba(250, 252, 247, 0.98))"
+  sidebar:
+    background: "linear-gradient(180deg, rgba(245, 249, 241, 0.98), rgba(238, 244, 234, 0.96))"
+    boxShadow: "inset -1px 0 0 rgba(127, 169, 139, 0.10)"
+  tab:
+    clipPath: "polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)"
+    background: "linear-gradient(180deg, rgba(250, 252, 247, 0.98), rgba(236, 242, 231, 0.94))"
+  badge:
+    boxShadow: "inset 0 0 0 1px rgba(127, 169, 139, 0.16)"
+  backdrop:
+    background: "radial-gradient(circle at top left, rgba(127, 169, 139, 0.12), transparent 36%), radial-gradient(circle at bottom right, rgba(207, 225, 198, 0.16), transparent 34%), linear-gradient(180deg, rgba(243, 246, 239, 1), rgba(237, 242, 233, 1))"
+  page:
+    background: "linear-gradient(180deg, rgba(243, 246, 239, 0.98), rgba(237, 242, 233, 1))"
+
+colorOverrides:
+  card: "#fafcf7"
+  cardForeground: "#202722"
+  popover: "#ffffff"
+  popoverForeground: "#202722"
+  primary: "#7fa98b"
+  primaryForeground: "#ffffff"
+  secondary: "#dde5d8"
+  secondaryForeground: "#2d352f"
+  muted: "#edf1e8"
+  mutedForeground: "#68736b"
+  accent: "#cfe1c6"
+  accentForeground: "#2d352f"
+  destructive: "#cf7276"
+  destructiveForeground: "#ffffff"
+  success: "#75b48a"
+  warning: "#caa65d"
+  border: "#d8e1d5"
+  input: "#e5ece0"
+  ring: "#7fa98b"
+
+customCSS: |
+  :root[data-layout-variant="cockpit"] {
+    color-scheme: light;
+  }
+
+  :root[data-layout-variant="cockpit"] body {
+    background:
+      radial-gradient(circle at 18% 8%, rgba(127, 169, 139, 0.10), transparent 24%),
+      radial-gradient(circle at 82% 0%, rgba(207, 225, 198, 0.15), transparent 28%),
+      linear-gradient(180deg, #f3f6ef 0%, #edf2e9 100%);
+  }
+
+  :root[data-layout-variant="cockpit"] body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background:
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0)),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(127, 169, 139, 0) 0,
+        rgba(127, 169, 139, 0) 4px,
+        rgba(127, 169, 139, 0.03) 5px,
+        rgba(127, 169, 139, 0) 6px
+      );
+    opacity: 0.32;
+    mix-blend-mode: soft-light;
+  }
+
+  :root[data-layout-variant="cockpit"] ::selection {
+    background: rgba(127, 169, 139, 0.20);
+    color: #202722;
+  }
+
+  :root[data-layout-variant="cockpit"] a {
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.16em;
+  }
