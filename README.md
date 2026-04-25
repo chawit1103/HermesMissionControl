@@ -56,6 +56,7 @@ This repo is already laid out exactly like a Hermes dashboard plugin submission.
 - If the tab is missing, confirm the path is `~/.hermes/plugins/mission-control/dashboard/`
 - If the theme is missing, confirm the path is `~/.hermes/dashboard-themes/mission-control.yaml`
 - If you changed backend code, restart `hermes dashboard`
+- If the theme picker shows a dashed placeholder instead of a color bar for Mission Control, that is a Hermes UI preview limitation; the theme still applies normally after selection
 - If Hermes has no sessions yet, Mission Control will show an empty state instead of failing
 - If Hermes internals are unavailable, the plugin falls back safely rather than crashing
 
