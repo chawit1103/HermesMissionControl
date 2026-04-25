@@ -6,13 +6,13 @@ It turns Hermes into a polished command center with live status, recent sessions
 
 ## Preview
 
-![Mission Control tab](screenshots/preview/mission-control-tab.jpg)
+![Mission Control tab](screenshots/mission-control-tab.jpg)
 
-![Session detail drawer](screenshots/preview/mission-control-session-detail.jpg)
+![Session detail drawer](screenshots/mission-control-session-detail.jpg)
 
-![Config snapshot](screenshots/preview/mission-control-config-snapshot.jpg)
+![Config snapshot](screenshots/mission-control-config-snapshot.jpg)
 
-![Activity timeline](screenshots/preview/mission-control-activity-timeline.jpg)
+![Activity timeline](screenshots/mission-control-activity-timeline.jpg)
 
 ## Quick Start
 
