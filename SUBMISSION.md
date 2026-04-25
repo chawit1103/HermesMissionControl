@@ -15,7 +15,8 @@ Hermes Mission Control makes Hermes feel like a serious control surface instead 
 ## Why It Wins
 
 - Visually distinctive: deep navy panels, cyan telemetry, amber warnings, scanlines, and notched cockpit chrome
-- Practical: live status, recent sessions, plugin rescan, config snapshot, and operator notes
+- Practical: live status, recent sessions, session detail drawer, health radar, config diff, plugin rescan, and operator notes
+- Flexible: includes five extra pastel-minimal themes for judges who want a lighter, more readable look
 - Resilient: missing SDK methods, empty sessions, backend failures, and unsupported internals all fall back safely
 - Easy to judge: install in a couple of commands, open one tab, and the value is immediately obvious
 - True to the platform: plain JavaScript IIFE, Hermes SDK only, no JSX, no build pipeline, no bundled React
@@ -30,11 +31,11 @@ mkdir -p ~/.hermes/plugins/
 cp -R plugin/mission-control ~/.hermes/plugins/
 ```
 
-2. Copy the theme file:
+2. Copy the theme files:
 
 ```bash
 mkdir -p ~/.hermes/dashboard-themes/
-cp theme/mission-control.yaml ~/.hermes/dashboard-themes/
+cp theme/*.yaml ~/.hermes/dashboard-themes/
 ```
 
 3. Launch Hermes Dashboard:
