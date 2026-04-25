@@ -2,6 +2,8 @@
 
 Use this folder for submission screenshots and demo captures.
 
+Preview images used in the main `README.md` live in `screenshots/preview/`.
+
 Suggested files:
 
 - `mission-control-tab.png`
