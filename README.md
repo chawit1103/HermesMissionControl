@@ -35,28 +35,19 @@ curl http://127.0.0.1:9119/api/dashboard/plugins/rescan
 - A rescan button that hits `/api/dashboard/plugins/rescan`
 - A premium dark theme with scanlines, glow, and notched panels
 
-## How It Works
+## Judge Notes
 
 - Plugin structure: `plugin/mission-control/dashboard/manifest.json`, `dist/index.js`, `dist/style.css`, `plugin_api.py`
 - Theme file: `theme/mission-control.yaml`
 - UI runtime: plain JavaScript IIFE, no JSX, no bundler, no React bundle
 - SDK usage: `window.__HERMES_PLUGIN_SDK__`, `SDK.React`, `SDK.components`, `SDK.api`, `SDK.fetchJSON`
-
-## Installation Notes
-
-This repo is already laid out exactly like a Hermes dashboard plugin submission.
-
-- Copy the plugin folder into `~/.hermes/plugins/`
-- Copy the theme YAML into `~/.hermes/dashboard-themes/`
-- Run `hermes dashboard`
-- Refresh or rescan if the tab does not appear right away
+- Custom theme previews in the picker can show a dashed placeholder; the theme still applies normally
 
 ## Troubleshooting
 
 - If the tab is missing, confirm the path is `~/.hermes/plugins/mission-control/dashboard/`
 - If the theme is missing, confirm the path is `~/.hermes/dashboard-themes/mission-control.yaml`
 - If you changed backend code, restart `hermes dashboard`
-- If the theme picker shows a dashed placeholder instead of a color bar for Mission Control, that is a Hermes UI preview limitation; the theme still applies normally after selection
 - If Hermes has no sessions yet, Mission Control will show an empty state instead of failing
 - If Hermes internals are unavailable, the plugin falls back safely rather than crashing
 
