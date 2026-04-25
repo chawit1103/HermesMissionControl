@@ -235,6 +235,52 @@ def build_checklist(session_count: Optional[int], config_available: bool) -> lis
     ]
 
 
+def build_health_score(session_count: Optional[int], config_available: bool) -> int:
+    score = 100
+    if session_count is None:
+        score -= 28
+    elif session_count == 0:
+        score -= 12
+    elif session_count > 8:
+        score -= 6
+
+    if not config_available:
+        score -= 18
+
+    return max(0, min(100, score))
+
+
+def build_signals(session_count: Optional[int], config_available: bool, health_score: int) -> list[Dict[str, Any]]:
+    return [
+        {
+            "label": "Sessions",
+            "ok": session_count is not None,
+            "value": session_count,
+            "detail": (
+                f"{session_count} sessions visible"
+                if session_count is not None
+                else "Session DB import or query unavailable."
+            ),
+        },
+        {
+            "label": "Config",
+            "ok": config_available,
+            "value": "available" if config_available else "fallback",
+            "detail": (
+                "Runtime config summary can be loaded safely."
+                if config_available
+                else "Using fallback config snapshot."
+            ),
+        },
+        {
+            "label": "Health",
+            "ok": health_score >= 75,
+            "value": health_score,
+            "detail": "Overall Mission Control health score.",
+        },
+    ]
+
+
 @router.get("/summary")
 async def summary() -> Dict[str, Any]:
     config_available = False
@@ -246,6 +292,7 @@ async def summary() -> Dict[str, Any]:
 
     session_count = safe_session_count()
     checklist = build_checklist(session_count, config_available)
+    health_score = build_health_score(session_count, config_available)
     status = "operational" if config_available or session_count is not None else "fallback"
 
     return {
@@ -253,6 +300,8 @@ async def summary() -> Dict[str, Any]:
         "status": status,
         "timestamp": now_iso(),
         "session_count": session_count,
+        "health_score": health_score,
+        "signals": build_signals(session_count, config_available, health_score),
         "checklist": checklist,
     }
 
@@ -274,7 +323,7 @@ async def config_snapshot() -> Dict[str, Any]:
 
     try:
         config = load_config()
-    except Exception as exc:
+    except Exception:
         return {
             "plugin_name": PLUGIN_NAME,
             "status": "fallback",
@@ -284,7 +333,6 @@ async def config_snapshot() -> Dict[str, Any]:
             "redactions": {
                 "applied": True,
                 "note": "Config loader raised an exception.",
-                "error": str(exc),
             },
         }
 

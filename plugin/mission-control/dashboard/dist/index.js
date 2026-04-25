@@ -5,11 +5,10 @@
   }
 
   var React = SDK.React;
-  var hooks = SDK.hooks || {};
-  var useState = hooks.useState;
-  var useEffect = hooks.useEffect;
-  var useMemo = hooks.useMemo;
-  var useRef = hooks.useRef;
+  var useState = React.useState;
+  var useEffect = React.useEffect;
+  var useMemo = React.useMemo;
+  var useRef = React.useRef;
 
   var components = SDK.components || {};
   var Card = components.Card || "div";
@@ -65,22 +64,45 @@
 
   function readStorage() {
     if (typeof window === "undefined" || !window.localStorage) {
-      return { notes: "", checklist: DEFAULT_CHECKLIST.slice() };
+      return {
+        notes: "",
+        checklist: cloneChecklist(DEFAULT_CHECKLIST),
+        selectedSessionId: "",
+        timeline: [],
+        snapshotHistory: []
+      };
     }
 
     try {
       var raw = window.localStorage.getItem(STORAGE_KEY);
       if (!raw) {
-        return { notes: "", checklist: DEFAULT_CHECKLIST.slice() };
+        return {
+          notes: "",
+          checklist: cloneChecklist(DEFAULT_CHECKLIST),
+          selectedSessionId: "",
+          timeline: [],
+          snapshotHistory: []
+        };
       }
       var parsed = JSON.parse(raw);
       var checklist = hydrateChecklist(parsed && parsed.checklist);
+      var timeline = hydrateTimeline(parsed && parsed.timeline);
+      var snapshotHistory = hydrateSnapshotHistory(parsed && parsed.snapshotHistory);
       return {
         notes: typeof parsed.notes === "string" ? parsed.notes : "",
-        checklist: checklist
+        checklist: checklist,
+        selectedSessionId: typeof parsed.selectedSessionId === "string" ? parsed.selectedSessionId : "",
+        timeline: timeline,
+        snapshotHistory: snapshotHistory
       };
     } catch (err) {
-      return { notes: "", checklist: DEFAULT_CHECKLIST.slice() };
+      return {
+        notes: "",
+        checklist: cloneChecklist(DEFAULT_CHECKLIST),
+        selectedSessionId: "",
+        timeline: [],
+        snapshotHistory: []
+      };
     }
   }
 
@@ -93,12 +115,25 @@
         STORAGE_KEY,
         JSON.stringify({
           notes: state.notes,
-          checklist: state.checklist
+          checklist: state.checklist,
+          selectedSessionId: state.selectedSessionId || "",
+          timeline: state.timeline || [],
+          snapshotHistory: state.snapshotHistory || []
         })
       );
     } catch (err) {
       return;
     }
+  }
+
+  function cloneChecklist(items) {
+    return (items || []).map(function (item) {
+      return {
+        id: item.id,
+        label: item.label,
+        done: Boolean(item.done)
+      };
+    });
   }
 
   function hydrateChecklist(saved) {
@@ -145,6 +180,37 @@
     });
 
     return merged;
+  }
+
+  function hydrateTimeline(saved) {
+    var items = Array.isArray(saved) ? saved : [];
+    return items
+      .map(function (item) {
+        var entry = item && typeof item === "object" ? item : {};
+        var timestamp = entry.timestamp || entry.at || entry.time || null;
+        return {
+          id: String(entry.id || "timeline-" + Math.random().toString(36).slice(2, 10)),
+          kind: typeof entry.kind === "string" ? entry.kind : "event",
+          title: typeof entry.title === "string" ? entry.title : "Activity",
+          detail: typeof entry.detail === "string" ? entry.detail : "",
+          tone: typeof entry.tone === "string" ? entry.tone : "muted",
+          timestamp: typeof timestamp === "string" ? timestamp : nowIso()
+        };
+      })
+      .slice(0, 16);
+  }
+
+  function hydrateSnapshotHistory(saved) {
+    var items = Array.isArray(saved) ? saved : [];
+    return items
+      .map(function (item) {
+        var entry = item && typeof item === "object" ? item : {};
+        return {
+          capturedAt: typeof entry.capturedAt === "string" ? entry.capturedAt : nowIso(),
+          summary: entry.summary && typeof entry.summary === "object" ? entry.summary : {}
+        };
+      })
+      .slice(0, 6);
   }
 
   function subscribe(listener) {
@@ -424,7 +490,8 @@
       messages: messages,
       tokens: tokens,
       timestamp: timestamp,
-      excerpt: String(excerpt)
+      excerpt: String(excerpt),
+      raw: session
     };
   }
 
@@ -477,740 +544,99 @@
     return rows;
   }
 
-  function computeMetrics(state) {
-    var sessionCount = state.sessions.length;
-    var running = state.status ? state.status.running : false;
-    var configHealth = state.snapshot && state.snapshot.available ? 100 : state.config ? 80 : 42;
-    var activity = clamp(sessionCount * 11 + (running ? 28 : 0), 8, 100);
-    var heartbeat = running ? 92 : 36;
-    var load = clamp((sessionCount / 10) * 100, 10, 100);
-    var config = clamp(configHealth, 10, 100);
-    return [
-      { label: "Agent health", value: heartbeat, tone: running ? "ok" : "warn" },
-      { label: "Session load", value: load, tone: sessionCount > 8 ? "warn" : "ok" },
-      { label: "Live activity", value: activity, tone: sessionCount ? "ok" : "muted" },
-      { label: "Config confidence", value: config, tone: state.snapshot && state.snapshot.available ? "ok" : "warn" }
-    ];
-  }
-
-  function summaryTone(value) {
-    if (value >= 75) {
-      return "var(--mc-success)";
+  function flattenForDiff(value, prefix, out, depth) {
+    var key = prefix || "root";
+    var currentDepth = depth || 0;
+    if (value === null || value === undefined) {
+      out[key] = value;
+      return;
     }
-    if (value >= 45) {
-      return "var(--mc-warning)";
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      out[key] = value;
+      return;
     }
-    return "var(--mc-danger)";
-  }
-
-  function smallBadge(text, tone) {
-    return h(
-      Badge,
-      {
-        className: joinClassNames("mc-pill", tone === "warn" ? "mc-pill--warn" : ""),
-        style: tone
-          ? {
-              borderColor: tone === "warn" ? "rgba(255, 191, 90, 0.35)" : "rgba(127, 232, 255, 0.28)"
-            }
-          : null
-      },
-      h("span", { className: "mc-pill__dot", style: tone === "warn" ? { background: "var(--mc-warning)" } : null }),
-      text
-    );
-  }
-
-  function renderMeter(metric) {
-    return h(
-      "div",
-      { className: "mc-meter", key: metric.label },
-      h(
-        "div",
-        { className: "mc-meter__row" },
-        h("span", null, metric.label),
-        h("span", { style: { color: summaryTone(metric.value) } }, formatNumber(metric.value) + "%")
-      ),
-      h(
-        "div",
-        { className: "mc-meter__track" },
-        h("div", {
-          className: "mc-meter__fill",
-          style: {
-            width: clamp(metric.value, 0, 100) + "%",
-            background:
-              metric.tone === "warn"
-                ? "linear-gradient(90deg, var(--mc-warning), #ffdc8f)"
-                : metric.tone === "muted"
-                ? "linear-gradient(90deg, rgba(127, 232, 255, 0.36), rgba(127, 232, 255, 0.12))"
-                : "linear-gradient(90deg, var(--mc-accent), var(--mc-success))"
-          }
-        })
-      )
-    );
-  }
-
-  function statCard(title, subtitle, value, detail, meta, meters) {
-    return h(
-      Card,
-      { className: "mc-card-shell mc-stat" },
-      h(
-        CardHeader,
-        { className: "mc-card-shell__header" },
-        h(
-          "div",
-          null,
-          h(CardTitle, { className: "mc-card-shell__title" }, title),
-          h("p", { className: "mc-card-shell__subtitle" }, subtitle)
-        ),
-        meta || null
-      ),
-      h(
-        CardContent,
-        { className: "mc-card-shell__content" },
-        h("div", { className: "mc-stat__top" }, h("div", { className: "mc-stat__value" }, value)),
-        h("div", { className: "mc-stat__detail" }, detail),
-        meters && meters.length
-          ? h("div", { className: "mc-meter-list" }, meters.map(renderMeter))
-          : null
-      )
-    );
-  }
-
-  function emptyState(message) {
-    return h(
-      "div",
-      { className: "mc-alert" },
-      message
-    );
-  }
-
-  function sessionCard(session) {
-    return h(
-      "article",
-      { className: "mc-session", key: session.id },
-      h(
-        "div",
-        { className: "mc-session__head" },
-        h("div", null, h("div", { className: "mc-session__title" }, session.title), h("div", { className: "mc-session__meta" }, session.id)),
-        h(Badge, { className: "mc-session__badge" }, session.status)
-      ),
-      h(
-        "div",
-        { className: "mc-session__meta" },
-        h("span", null, "Model: " + session.model),
-        h("span", null, "Messages: " + formatNumber(session.messages)),
-        h("span", null, "Tokens: " + formatNumber(session.tokens)),
-        h("span", null, relativeTime(session.timestamp))
-      ),
-      session.excerpt ? h("div", { className: "mc-session__excerpt" }, session.excerpt) : null
-    );
-  }
-
-  function checklistItem(item, onToggle, onRemove) {
-    return h(
-      "div",
-      { className: "mc-checklist__item", key: item.id },
-      h("input", {
-        type: "checkbox",
-        checked: Boolean(item.done),
-        onChange: function () {
-          onToggle(item.id);
-        }
-      }),
-      h(
-        "div",
-        { className: "mc-checklist__body" },
-        h("div", { className: joinClassNames("mc-checklist__label", item.done ? "mc-checklist__label--done" : "") }, item.label)
-      ),
-      h(
-        Button,
-        {
-          type: "button",
-          className: "mc-checklist__remove",
-          onClick: function () {
-            onRemove(item.id);
-          }
-        },
-        "Remove"
-      )
-    );
-  }
-
-  function renderSummaryGrid(summary) {
-    var rows = flattenSummary(summary);
-    if (!rows.length) {
-      return emptyState("No safe config summary is available yet.");
+    if (currentDepth >= 3) {
+      out[key] = formatJsonValue(value);
+      return;
     }
-
-    return h(
-      "div",
-      { className: "mc-config__grid" },
-      rows.map(function (row) {
-        var isChecklist = row.key === "checklist" && Array.isArray(row.value);
-        return h(
-          "div",
-          { className: "mc-config__item", key: row.key },
-          h("div", { className: "mc-config__key" }, row.key),
-          isChecklist
-            ? h(
-                "div",
-                { className: "mc-list", style: { gap: "0.45rem" } },
-                row.value.map(function (item, index) {
-                  var label = item && typeof item === "object" ? item.label || ("Check " + (index + 1)) : String(item);
-                  var ok = item && typeof item === "object" ? Boolean(item.ok) : Boolean(item);
-                  var detail = item && typeof item === "object" ? item.detail : "";
-                  return h(
-                    "div",
-                    {
-                      className: "mc-session",
-                      key: row.key + "-" + index,
-                      style: { padding: "0.6rem 0.7rem" }
-                    },
-                    h(
-                      "div",
-                      { className: "mc-session__head" },
-                      h("div", { className: "mc-session__title", style: { fontSize: "0.88rem" } }, label),
-                      h(Badge, { className: "mc-session__badge" }, ok ? "OK" : "CHECK")
-                    ),
-                    detail ? h("div", { className: "mc-session__excerpt" }, detail) : null
-                  );
-                })
-              )
-            : h("div", { className: "mc-config__value" }, formatJsonValue(row.value))
-        );
-      })
-    );
-  }
-
-  function SidebarSlot() {
-    var state = useSharedState();
-    var status = state.status ? normalizeStatus(state.status) : null;
-    var sessionCount = state.sessions.length;
-    var metrics = computeMetrics(state);
-
-    return h(
-      "div",
-      { className: "mc-stack", style: { padding: "0.85rem" } },
-      h(
-        "div",
-        { className: "mc-card-shell" },
-        h(
-          "div",
-          { className: "mc-card-shell__header" },
-          h(
-            "div",
-            null,
-            h("div", { className: "mc-card-shell__title" }, "Mission Control"),
-            h("p", { className: "mc-card-shell__subtitle" }, "Cockpit sidebar telemetry")
-          ),
-          smallBadge(state.loading ? "Syncing" : status && status.running ? "Online" : "Watch", state.loading ? "warn" : status && status.running ? "ok" : "warn")
-        ),
-        h(
-          "div",
-          { className: "mc-card-shell__content" },
-          h("div", { className: "mc-stat__detail" }, status ? status.detail : "Waiting for the first refresh."),
-          h("div", { style: { display: "grid", gap: "0.65rem", marginTop: "0.85rem" } }, [
-            h("div", { key: "status", className: "mc-config__item" }, h("div", { className: "mc-config__key" }, "System status"), h("div", { className: "mc-config__value" }, status ? status.label : "unknown")),
-            h("div", { key: "sessions", className: "mc-config__item" }, h("div", { className: "mc-config__key" }, "Session count"), h("div", { className: "mc-config__value" }, formatNumber(sessionCount))),
-            h("div", { key: "refresh", className: "mc-config__item" }, h("div", { className: "mc-config__key" }, "Last refresh"), h("div", { className: "mc-config__value" }, formatClock(state.lastRefresh)))
-          ]),
-          h("div", { className: "mc-meter-list", style: { marginTop: "0.9rem" } }, metrics.slice(0, 3).map(renderMeter))
-        )
-      )
-    );
-  }
-
-  function HeaderRightSlot() {
-    return h(
-      "div",
-      { className: "mc-control-row", style: { alignItems: "center", paddingRight: "0.25rem" } },
-      h(
-        Badge,
-        {
-          className: "mc-pill"
-        },
-        h("span", { className: "mc-pill__dot" }),
-        "Mission Control Online"
-      )
-    );
-  }
-
-  function FooterRightSlot() {
-    return h(
-      "div",
-      { className: "mc-control-row", style: { justifyContent: "flex-end", padding: "0.25rem 0.35rem" } },
-      h(
-        Badge,
-        {
-          className: "mc-pill",
-          title: "Hermes Mission Control plugin version"
-        },
-        "v" + VERSION
-      )
-    );
-  }
-
-  function MissionControlPage() {
-    var state = useSharedState();
-    var current = useState(readStorage());
-    var workbench = current[0];
-    var setWorkbench = current[1];
-    var noteDraft = useState("");
-    var newNote = noteDraft[0];
-    var setNewNote = noteDraft[1];
-    var refreshToken = useRef(0);
-    var mountedRef = useRef(true);
-
-    useEffect(function () {
-      return function () {
-        mountedRef.current = false;
-      };
-    }, []);
-
-    function updateWorkbench(patch) {
-      var next = Object.assign({}, workbench, patch);
-      setWorkbench(next);
-      writeStorage(next);
-    }
-
-    function toggleChecklist(id) {
-      var nextChecklist = workbench.checklist.map(function (item) {
-        if (item.id === id) {
-          return Object.assign({}, item, { done: !item.done });
-        }
-        return item;
-      });
-      updateWorkbench({ checklist: nextChecklist });
-    }
-
-    function removeChecklistItem(id) {
-      updateWorkbench({
-        checklist: workbench.checklist.filter(function (item) {
-          return item.id !== id;
-        })
-      });
-    }
-
-    function addChecklistItem() {
-      var trimmed = String(newNote || "").trim();
-      if (!trimmed) {
+    if (Array.isArray(value)) {
+      if (!value.length) {
+        out[key] = [];
         return;
       }
-      var id = "custom-" + Date.now().toString(36);
-      updateWorkbench({
-        checklist: workbench.checklist.concat([
-          {
-            id: id,
-            label: trimmed,
-            done: false
-          }
-        ])
+      if (value.every(function (item) {
+        return item === null || item === undefined || typeof item === "string" || typeof item === "number" || typeof item === "boolean";
+      })) {
+        out[key] = value.slice();
+        return;
+      }
+      value.slice(0, 5).forEach(function (item, index) {
+        flattenForDiff(item, key + "[" + index + "]", out, currentDepth + 1);
       });
-      setNewNote("");
+      return;
     }
-
-    function refreshData(reason) {
-      var requestId = refreshToken.current + 1;
-      refreshToken.current = requestId;
-      patchSharedState({
-        loading: sharedState.lastRefresh ? false : true,
-        refreshing: true,
-        error: "",
-        rescanMessage: reason === "rescan" ? "Plugin registry refresh requested." : ""
+    if (typeof value === "object") {
+      var keys = Object.keys(value).sort();
+      if (!keys.length) {
+        out[key] = {};
+        return;
+      }
+      keys.forEach(function (itemKey) {
+        var nextPrefix = prefix ? prefix + "." + itemKey : itemKey;
+        flattenForDiff(value[itemKey], nextPrefix, out, currentDepth + 1);
       });
-
-      var statusPromise = safeCall(function () {
-        return callApi("getStatus");
-      });
-      var sessionsPromise = safeCall(function () {
-        return callApi("getSessions", [10]);
-      });
-      var configPromise = safeCall(function () {
-        return callApi("getConfig");
-      });
-      var summaryPromise = safeCall(function () {
-        return requestJSON("/api/plugins/" + PLUGIN_NAME + "/summary");
-      });
-      var snapshotPromise = safeCall(function () {
-        return requestJSON("/api/plugins/" + PLUGIN_NAME + "/config-snapshot");
-      });
-
-      Promise.all([statusPromise, sessionsPromise, configPromise, summaryPromise, snapshotPromise]).then(function (results) {
-        if (refreshToken.current !== requestId || !mountedRef.current) {
-          return;
-        }
-
-        var statusResult = results[0];
-        var sessionsResult = results[1];
-        var configResult = results[2];
-        var summaryResult = results[3];
-        var snapshotResult = results[4];
-        var errors = [];
-
-        if (!statusResult.ok) {
-          errors.push("status: " + statusResult.error);
-        }
-        if (!sessionsResult.ok) {
-          errors.push("sessions: " + sessionsResult.error);
-        }
-        if (!configResult.ok) {
-          errors.push("config: " + configResult.error);
-        }
-        if (!summaryResult.ok) {
-          errors.push("summary: " + summaryResult.error);
-        }
-        if (!snapshotResult.ok) {
-          errors.push("snapshot: " + snapshotResult.error);
-        }
-
-        patchSharedState({
-          loading: false,
-          refreshing: false,
-          error: errors.length ? errors.join(" ‚Ä¢ ") : "",
-          lastRefresh: new Date().toISOString(),
-          status: statusResult.ok ? statusResult.value : null,
-          sessions: sessionsResult.ok ? normalizeSessions(sessionsResult.value) : [],
-          config: configResult.ok ? configResult.value : null,
-          summary: summaryResult.ok ? summaryResult.value : null,
-          snapshot: snapshotResult.ok ? snapshotResult.value : null,
-          rescanMessage: reason === "rescan" && !errors.length ? "Plugin registry refresh requested." : ""
-        });
-      });
+      return;
     }
-
-    useEffect(function () {
-      refreshData("initial");
-    }, []);
-
-    var normalizedStatus = state.status ? normalizeStatus(state.status) : null;
-    var sdkWarnings = getSdkReadiness();
-    var metrics = useMemo(function () {
-      return computeMetrics(state);
-    }, [state.status, state.sessions.length, state.snapshot, state.config]);
-    var liveSessionCount = state.sessions.length;
-    var statusTone = normalizedStatus && normalizedStatus.running ? "ok" : "warn";
-    var snapshotAvailable = state.snapshot && state.snapshot.available;
-
-    return h(
-      "div",
-      { className: "mc-page" },
-      h(
-        "section",
-        { className: "mc-hero" },
-        h(
-          "div",
-          { className: "mc-hero__top" },
-          h(
-            "div",
-            null,
-            h("p", { className: "mc-hero__eyebrow" }, "Hermes Agent Operations"),
-            h("h1", { className: "mc-hero__title" }, "Mission Control"),
-            h(
-              "p",
-              { className: "mc-hero__subtitle" },
-              "A premium cockpit for operators who need immediate visibility into Hermes status, session activity, plugin health, and runtime configuration."
-            ),
-            h(
-              "div",
-              { className: "mc-control-row", style: { marginTop: "0.9rem" } },
-              smallBadge(state.refreshing ? "Refreshing" : normalizedStatus && normalizedStatus.running ? "System Nominal" : "Attention", statusTone),
-              state.summary && state.summary.status ? smallBadge("Backend " + state.summary.status, state.summary.status === "fallback" ? "warn" : "ok") : null,
-              snapshotAvailable ? smallBadge("Config snapshot ready", "ok") : smallBadge("Config fallback", "warn")
-            )
-          ),
-          h(
-            "div",
-            { className: "mc-actions" },
-            h(
-              Button,
-              {
-                type: "button",
-                onClick: function () {
-                  refreshData("manual");
-                }
-              },
-              state.refreshing ? "Refreshing..." : "Refresh"
-            ),
-            h(
-              Button,
-              {
-                type: "button",
-                onClick: function () {
-                  patchSharedState({
-                    rescanMessage: "Rescanning plugin registry..."
-                  });
-                  requestRescan("/api/dashboard/plugins/rescan")
-                    .then(function () {
-                      refreshData("rescan");
-                    })
-                    .catch(function (error) {
-                      patchSharedState({
-                        refreshing: false,
-                        rescanMessage: "",
-                        error: "Rescan failed: " + normalizeError(error)
-                      });
-                    });
-                }
-              },
-              "Rescan Plugins"
-            )
-          )
-        )
-      ),
-      state.error ? h("div", { className: "mc-alert" }, state.error) : null,
-      state.rescanMessage ? h("div", { className: "mc-alert", style: { borderColor: "rgba(127, 232, 255, 0.18)", background: "rgba(127, 232, 255, 0.06)", color: "#daf8ff" } }, state.rescanMessage) : null,
-      sdkWarnings.length ? h("div", { className: "mc-alert", style: { borderColor: "rgba(255, 191, 90, 0.24)", background: "rgba(255, 191, 90, 0.08)", color: "#ffeec6" } }, "SDK fallback mode: " + sdkWarnings.join(", ")) : null,
-      h(
-        "div",
-        { className: "mc-grid mc-grid--metrics" },
-        statCard(
-          "System Status",
-          "Live Hermes status and health",
-          normalizedStatus ? normalizedStatus.label.toUpperCase() : state.loading ? "SYNCING" : "UNKNOWN",
-          normalizedStatus ? normalizedStatus.detail : "Waiting for a status response.",
-          h("div", { className: "mc-pill", style: { marginLeft: "auto" } }, normalizedStatus ? normalizedStatus.version : "n/a"),
-          [
-            { label: "Active sessions", value: clamp(liveSessionCount * 11, 4, 100), tone: statusTone },
-            { label: "Agent reachability", value: normalizedStatus && normalizedStatus.running ? 92 : 31, tone: statusTone },
-            { label: "Platform links", value: normalizedStatus ? clamp((normalizedStatus.platforms.length || 0) * 24, 8, 100) : 18, tone: statusTone }
-          ]
-        ),
-        statCard(
-          "Recent Sessions",
-          "The last ten Hermes sessions",
-          formatNumber(liveSessionCount),
-          liveSessionCount ? "Session activity is being sampled from Hermes API responses." : "No sessions were returned yet.",
-          h("div", { className: "mc-pill", style: { marginLeft: "auto" } }, "10 limit"),
-          [
-            { label: "Recent activity", value: clamp(liveSessionCount * 12, 8, 100), tone: liveSessionCount > 7 ? "warn" : "ok" },
-            { label: "Volume", value: clamp((liveSessionCount / 10) * 100, 10, 100), tone: liveSessionCount > 7 ? "warn" : "ok" },
-            { label: "Latency feel", value: normalizedStatus && normalizedStatus.running ? 88 : 44, tone: normalizedStatus && normalizedStatus.running ? "ok" : "warn" }
-          ]
-        ),
-        statCard(
-          "Config Snapshot",
-          "Safe runtime configuration summary",
-          snapshotAvailable ? "AVAILABLE" : "FALLBACK",
-          snapshotAvailable ? "Hermes config summary is available without leaking secrets." : "Config data is unavailable, so the plugin is using fallback state.",
-          h("div", { className: "mc-pill", style: { marginLeft: "auto" } }, state.config ? "getConfig" : "fallback"),
-          [
-            { label: "Snapshot health", value: snapshotAvailable ? 92 : 28, tone: snapshotAvailable ? "ok" : "warn" },
-            { label: "Redaction", value: 100, tone: "ok" },
-            { label: "Visibility", value: state.config ? 84 : 36, tone: snapshotAvailable ? "ok" : "warn" }
-          ]
-        ),
-        statCard(
-          "Plugin Backend",
-          "Mission Control summary API",
-          state.summary && state.summary.status ? String(state.summary.status).toUpperCase() : state.loading ? "SYNCING" : "READY",
-          state.summary && state.summary.checklist ? "Backend checklist returned " + state.summary.checklist.length + " checks." : "Backend summary is waiting for a response.",
-          h("div", { className: "mc-pill", style: { marginLeft: "auto" } }, "API"),
-          [
-            { label: "Backend health", value: state.summary && state.summary.status === "operational" ? 96 : 58, tone: state.summary && state.summary.status === "operational" ? "ok" : "warn" },
-            { label: "Checklist size", value: clamp((state.summary && state.summary.checklist ? state.summary.checklist.length : 0) * 24, 10, 100), tone: "ok" },
-            { label: "Refresh cadence", value: state.lastRefresh ? 88 : 26, tone: state.lastRefresh ? "ok" : "warn" }
-          ]
-        )
-      ),
-      h(
-        "div",
-        { className: "mc-grid mc-grid--main" },
-        h(
-          "div",
-          { className: "mc-stack" },
-          h(
-            Card,
-            { className: "mc-card-shell" },
-            h(
-              CardHeader,
-              { className: "mc-card-shell__header" },
-              h(
-                "div",
-                null,
-                h(CardTitle, { className: "mc-card-shell__title" }, "Recent Sessions"),
-                h("p", { className: "mc-card-shell__subtitle" }, "High-signal session feed from Hermes API")
-              ),
-              h("div", { className: "mc-pill" }, "last 10")
-            ),
-            h(
-              CardContent,
-              { className: "mc-card-shell__content" },
-              state.sessions.length
-                ? h("div", { className: "mc-list" }, state.sessions.map(sessionCard))
-                : state.loading
-                ? h("div", { className: "mc-list" }, [
-                    h("div", { className: "mc-session mc-skeleton", style: { height: "5rem" } }, null),
-                    h("div", { className: "mc-session mc-skeleton", style: { height: "5rem" } }, null)
-                  ])
-                : emptyState("No recent sessions were returned by the API.")
-            )
-          ),
-          h(
-            Card,
-            { className: "mc-card-shell" },
-            h(
-              CardHeader,
-              { className: "mc-card-shell__header" },
-              h(
-                "div",
-                null,
-                h(CardTitle, { className: "mc-card-shell__title" }, "Operational Notes"),
-                h("p", { className: "mc-card-shell__subtitle" }, "LocalStorage-backed notes and checklist")
-              ),
-              h("div", { className: "mc-pill" }, "private")
-            ),
-            h(
-              CardContent,
-              { className: "mc-card-shell__content mc-operator" },
-              h(
-                "div",
-                null,
-                h(Label, { className: "mc-label", htmlFor: "mc-notes" }, "Operator notes"),
-                h("textarea", {
-                  id: "mc-notes",
-                  className: "mc-textarea",
-                  value: workbench.notes,
-                  onChange: function (event) {
-                    updateWorkbench({ notes: event.target.value });
-                  },
-                  placeholder: "Capture runbook reminders, handoff notes, or diagnostics here..."
-                })
-              ),
-              h(
-                "div",
-                null,
-                h(Label, { className: "mc-label", htmlFor: "mc-checklist-input" }, "Add checklist item"),
-                h(
-                  "div",
-                  { className: "mc-control-row" },
-                  h(Input, {
-                    id: "mc-checklist-input",
-                    className: "mc-input",
-                    value: newNote,
-                    onChange: function (event) {
-                      setNewNote(event.target.value);
-                    },
-                    placeholder: "New operational check..."
-                  }),
-                  h(
-                    Button,
-                    {
-                      type: "button",
-                      onClick: addChecklistItem
-                    },
-                    "Add"
-                  )
-                )
-              ),
-              h(
-                "div",
-                { className: "mc-checklist" },
-                workbench.checklist.map(function (item) {
-                  return checklistItem(item, toggleChecklist, removeChecklistItem);
-                })
-              ),
-              h(
-                "div",
-                { className: "mc-control-row" },
-                h(
-                  Button,
-                  {
-                    type: "button",
-                    onClick: function () {
-                      updateWorkbench({ checklist: workbench.checklist.map(function (item) { return Object.assign({}, item, { done: false }); }) });
-                    }
-                  },
-                  "Reset checklist"
-                ),
-                h(
-                  Button,
-                  {
-                    type: "button",
-                    onClick: function () {
-                      updateWorkbench({ notes: "" });
-                    }
-                  },
-                  "Clear notes"
-                )
-              )
-            )
-          )
-        ),
-        h(
-          "div",
-          { className: "mc-stack" },
-          h(
-            Card,
-            { className: "mc-card-shell" },
-            h(
-              CardHeader,
-              { className: "mc-card-shell__header" },
-              h(
-                "div",
-                null,
-                h(CardTitle, { className: "mc-card-shell__title" }, "Telemetry & Config"),
-                h("p", { className: "mc-card-shell__subtitle" }, "Status data, backend summary, and redacted config snapshot")
-              ),
-              h("div", { className: "mc-pill" }, "secure")
-            ),
-            h(
-              CardContent,
-              { className: "mc-card-shell__content mc-config" },
-              h("div", { className: "mc-config__group" }, metrics.map(renderMeter)),
-              h(Separator, { className: "mc-divider", style: { height: "1px", background: "rgba(127, 232, 255, 0.12)", margin: "0.25rem 0" } }),
-              h("div", { className: "mc-config__group" }, [
-                h("div", { className: "mc-card-shell__title", key: "backend-title" }, "Backend Summary"),
-                state.summary ? renderSummaryGrid(state.summary) : state.loading ? h("div", { className: "mc-session mc-skeleton", style: { height: "8rem" } }, null) : emptyState("Mission Control backend summary unavailable.")
-              ]),
-              h(Separator, { className: "mc-divider", style: { height: "1px", background: "rgba(127, 232, 255, 0.12)", margin: "0.25rem 0" } }),
-              h("div", { className: "mc-config__group" }, [
-                h("div", { className: "mc-card-shell__title", key: "snapshot-title" }, "Config Snapshot"),
-                state.snapshot && state.snapshot.summary ? renderSummaryGrid(state.snapshot.summary) : state.loading ? h("div", { className: "mc-session mc-skeleton", style: { height: "8rem" } }, null) : emptyState("Safe config snapshot unavailable.")
-              ])
-            )
-          ),
-          h(
-            Card,
-            { className: "mc-card-shell" },
-            h(
-              CardHeader,
-              { className: "mc-card-shell__header" },
-              h(
-                "div",
-                null,
-                h(CardTitle, { className: "mc-card-shell__title" }, "Fast Diagnostics"),
-                h("p", { className: "mc-card-shell__subtitle" }, "A compact readout for operators")
-              ),
-              h("div", { className: "mc-pill" }, "live")
-            ),
-            h(
-              CardContent,
-              { className: "mc-card-shell__content mc-config" },
-              h(
-                "div",
-                { className: "mc-config__grid" },
-                [
-                  { key: "session-count", label: "Session count", value: formatNumber(liveSessionCount) },
-                  { key: "status", label: "System status", value: normalizedStatus ? normalizedStatus.label : "unknown" },
-                  { key: "refresh", label: "Last refresh", value: formatClock(state.lastRefresh) },
-                  { key: "plugin", label: "Plugin version", value: VERSION }
-                ].map(function (item) {
-                  return h(
-                    "div",
-                    { className: "mc-config__item", key: item.key },
-                    h("div", { className: "mc-config__key" }, item.label),
-                    h("div", { className: "mc-config__value" }, item.value)
-                  );
-                })
-              )
-            )
-          )
-        )
-      )
-    );
+    out[key] = formatJsonValue(value);
   }
 
-  window.__HERMES_PLUGINS__.register(PLUGIN_NAME, MissionControlPage);
-  window.__HERMES_PLUGINS__.registerSlot(PLUGIN_NAME, "sidebar", SidebarSlot);
-  window.__HERMES_PLUGINS__.registerSlot(PLUGIN_NAME, "header-right", HeaderRightSlot);
-  window.__HERMES_PLUGINS__.registerSlot(PLUGIN_NAME, "footer-right", FooterRightSlot);
-})();
+  function diffSnapshots(previous, current) {
+    var prevFlat = {};
+    var currFlat = {};
+    flattenForDiff(previous || {}, "", prevFlat, 0);
+    flattenForDiff(current || {}, "", currFlat, 0);
+
+    var keys = {};
+    Object.keys(prevFlat).forEach(function (key) {
+      keys[key] = true;
+    });
+    Object.keys(currFlat).forEach(function (key) {
+      keys[key] = true;
+    });
+
+    var added = [];
+    var removed = [];
+    var changed = [];
+    Object.keys(keys)
+      .sort()
+      .foreach(function (key) {
+        var hasPrev = Object.prototype.hasOwnProperty.call(prevFlat, key);
+        var hasCurr = Object.prototype.hasOwnProperty.call(currFlat, key);
+        if (!hasPrev && hasCurr) {
+          added.push({ key: key, value: currFlat[key] });
+          return;
+        }
+        if (hasPrev && !hasCurr) {
+          removed.push({ key: key, value: prevFlat[key] });
+          return;
+        }
+        if (hasPrev && hasCurr && formatJsonValue(prevFlat[key]) !== formatJsonValue(currFlat[key])) {
+          changed.push({ key: key, before: prevFlat[key], after: currFlat[key] });
+        }
+      });
+
+    return {
+      added: added,
+      removed: removed,
+      changed: changed
+    };
+  }
+
+  function createTimelineEntry(kind, title, detail, tone) {
+    return {
+      id: kind + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8),
+      kind: kind,
+      title: title,
+      detail: detail || "",
+      ton: ton || "muted",
+      timestamp: new Date().itoJ⁄Óù∆≠y
