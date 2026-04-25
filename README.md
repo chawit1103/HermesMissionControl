@@ -16,14 +16,14 @@ It turns Hermes into a polished command center with live status, recent sessions
 
 ## Quick Start
 
-Install the plugin and theme:
+Install the plugin and themes:
 
 ```bash
 mkdir -p ~/.hermes/plugins/
 cp -R plugin/mission-control ~/.hermes/plugins/
 
 mkdir -p ~/.hermes/dashboard-themes/
-cp theme/mission-control.yaml ~/.hermes/dashboard-themes/
+cp theme/*.yaml ~/.hermes/dashboard-themes/
 
 hermes dashboard
 ```
@@ -49,10 +49,19 @@ curl http://127.0.0.1:9119/api/dashboard/plugins/rescan
 - A rescan button that hits `/api/dashboard/plugins/rescan`
 - A premium dark theme with scanlines, glow, and notched panels
 
+## Included Themes
+
+- `mission-control` - the original cockpit-style command center
+- `paper-bloom` - warm ivory and blush with extra readability
+- `sage-linen` - soft sage and linen with a calm editorial feel
+- `pebble-sky` - cool stone and powder blue with crisp contrast
+- `lavender-mist` - pale lilac and fog with a gentle minimal tone
+- `butter-petal` - buttercream and peach with a friendly airy look
+
 ## Installation Notes
 
 - Plugin structure: `plugin/mission-control/dashboard/manifest.json`, `dist/index.js`, `dist/style.css`, `plugin_api.py`
-- Theme file: `theme/mission-control.yaml`
+- Theme files: `theme/*.yaml`
 - UI runtime: plain JavaScript IIFE, no JSX, no bundler, no React bundle
 - SDK usage: `window.__HERMES_PLUGIN_SDK__`, `SDK.React`, `SDK.components`, `SDK.api`, `SDK.fetchJSON`
 - Custom theme previews in the picker can show a dashed placeholder; the theme still applies normally
