@@ -27,6 +27,7 @@ It helps operators answer the questions that matter fastest:
 - It is resilient: missing SDK methods, empty sessions, backend failures, and unsupported internals all fall back safely
 - It is easy to judge: install it in a couple of commands, open one tab, and the value is immediately obvious
 - It stays true to the platform: plain JavaScript IIFE, Hermes SDK only, no JSX, no build pipeline, no bundled React
+- The theme picker may show a dashed preview tile for custom themes; that is a Hermes dashboard preview limitation, not a theme failure
 
 ## Install Steps
 
