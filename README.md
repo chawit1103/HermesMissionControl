@@ -8,7 +8,7 @@ It turns Hermes into a polished command center with live status, recent sessions
 
 ![Mission Control tab](screenshots/mission-control-tab.jpg)
 
-![Token Usage](screenshots/tokenusage.jpg)
+![Token Usage](screenshots/token_usage.jpg)
 
 ![Session detail drawer](screenshots/mission-control-session-detail.jpg)
 
